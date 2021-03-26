@@ -1,4 +1,4 @@
-=Custom Z Score Generator for Fantasy Baseball
+# Custom Z Score Generator for Fantasy Baseball
 
 I play in a fantasy baseball league with a lot of categories (20 total). To gain an edge, I wanted to find players that would do better in a 10x10 league when most rankings grade players based on the more common 5x5 format. So this script imports projection and ranking data and outputs a sheet with rankings fr each player as well as a total z score value for each player.
 
