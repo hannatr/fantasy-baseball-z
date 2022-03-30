@@ -1,4 +1,10 @@
 import pandas as pd
+from fuzzywuzzy import process
+
+
+def fuzzy_match(name, names):
+    match, threshold = process.extractOne(name, names)
+    return match if threshold > 88 else name
 
 
 def hitters():
@@ -6,14 +12,22 @@ def hitters():
     projections = projections.rename(columns={"Name": "Player"})
     projections = projections.drop(
         columns=[
+            "PA",
+            "AB",
             "BB",
             "SO",
+            "HBP",
             "CS",
+            "-1",
             "OBP",
             "SLG",
             "wOBA",
+            "wRC+",
+            "-1.1",
+            "WAR",
+            "-1.2",
             "ADP",
-            "-1",
+            "-1.3",
             "playerid",
             "InterSD",
             "InterSK",
@@ -36,6 +50,14 @@ def hitters():
             "ADP",
             "vs. ADP",
         ]
+    )
+
+    # Do our best to match names between the two data sets before merging
+    player_names = list(
+        filter(lambda x: isinstance(x, str), rankings["Player"].tolist())
+    )
+    projections["Player"] = projections["Player"].apply(
+        lambda x: fuzzy_match(x, player_names)
     )
 
     merge = pd.merge(rankings, projections, on="Player")  # add how='left' to see differences
@@ -65,17 +87,18 @@ def pitchers():
             "BB",
             "BB/9",
             "FIP",
-            "ADP",
             "-1",
+            "WAR",
+            "RA9-WAR",
+            "-1.1",
+            "ADP",
+            "-1.2",
             "playerid",
             "InterSD",
             "InterSK",
             "IntraSD",
         ]
     )
-    # add QS to projections
-    projections["QS"] = (projections["IP"] / (32 * 6.15) - 0.11 * projections["ERA"]) * projections["GS"]
-    projections = projections.round({"QS": 0})
 
     rankings = pd.read_csv("sheets/pitcher_rankings.csv")
     rankings = rankings.drop(
@@ -90,6 +113,14 @@ def pitchers():
             "ADP",
             "vs. ADP",
         ]
+    )
+
+    # Do our best to match names between the two data sets before merging
+    player_names = list(
+        filter(lambda x: isinstance(x, str), rankings["Player"].tolist())
+    )
+    projections["Player"] = projections["Player"].apply(
+        lambda x: fuzzy_match(x, player_names)
     )
 
     merge = pd.merge(rankings, projections, on="Player")  # add how='left' to see differences
