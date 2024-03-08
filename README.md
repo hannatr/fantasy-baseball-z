@@ -8,7 +8,7 @@ To run the script:
  - Download a rankings spreadsheet you trust. I use FantasyPros: https://www.fantasypros.com/mlb/rankings/overall.php. Be sure to download pitcher and hitter rankings separately.
  - Download a projections spreadsheet you trust. I use ATC: https://www.fangraphs.com/projections.aspx?pos=all&stats=bat&type=atc. Be sure to download pitcher and hitter projections separately.
  - Update the file paths in `main.py` to your downloaded sheets.
- - The names between your rankings and projections probably don't match for all players. Add the `how='left'` flag to the two `pd.merge()` calls in main.py. Run the script. Manually examine the output files `sheets/hitters.csv` and `sheets/pitchers.csv` for names that don't match. Update your projections spreadsheet to match the rankings spreadsheet names.
+ - The names between your rankings and projections probably don't match for all players. Add the `how='left'` flag to the two `pd.merge()` calls in main.py. Run the script. Manually examine the output files `data/hitters.csv` and `data/pitchers.csv` for names that don't match. Update your projections spreadsheet to match the rankings spreadsheet names.
  - Update the categories for your league in `main.py`.
  - Run the scripts and examine the outputted sheets.
  

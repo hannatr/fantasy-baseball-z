@@ -2,57 +2,37 @@ import pandas as pd
 from rapidfuzz import process
 from unidecode import unidecode
 
+from fantasy_baseball import config
+
 
 def fuzzy_match(name, names):
-    # TODO handle multiple players with the same name (team as secondary)
-    match, threshold, _ = process.extractOne(name, names)
-    return match if threshold >= 80 else name
+    matches = process.extract(name, names, score_cutoff=80)
+    if len(matches) == 1:
+        if matches[0][1] < 90:
+            return name
+        if matches[0][1] < 100:
+            print(f"WARNING: Matching '{name}' to '{matches[0][0]}' with score {matches[0][1]}. Could be a problem.")
+        return matches[0][0]
+    elif len(matches) > 1:
+        if matches[1][1] == 100:
+            print(f"WARNING: Two identical matches for {name}!!!")
+        if matches[0][1] >= 90:
+            return matches[0][0]
+    return name
 
 
 def hitters():
-    projections = pd.read_csv("sheets/hitter_projections.csv")
+    projections = pd.read_csv(config.DATA_DIRECTORY.joinpath("hitter_projections.csv"))
     projections = projections.rename(columns={"Name": "Player"})
+    projections = projections.drop(columns=config.HIT_PROJ_DROP)
     # Remove any accent marks from player names for better matching
     projections["Player"] = projections["Player"].astype(str).apply(lambda x: unidecode(x))
-    projections = projections.drop(
-        columns=[
-            "#",
-            "PA",
-            "AB",
-            "BB",
-            "SO",
-            "HBP",
-            "CS",
-            "BB%",
-            "K%",
-            "ISO",
-            "BABIP",
-            "OBP",
-            "SLG",
-            "wOBA",
-            "wRC+",
-            "ADP",
-            "InterSD",
-            "InterSK",
-            "IntraSD",
-        ]
-    )
-    # add TB to projections
-    projections["TB"] = projections["H"] + projections["2B"] + (2 * projections["3B"]) + (3 * projections["HR"])
 
-    rankings = pd.read_csv("sheets/hitter_rankings.csv")
-    rankings = rankings.drop(
-        columns=[
-            "Team",
-            "Overall",
-            "Best",
-            "Worst",
-            "Avg",
-            "Std Dev",
-            "ADP",
-            "vs. ADP",
-        ]
-    )
+    # Add TB to projections
+    projections["TB"] = projections["H"] + (2 * projections["2B"]) + (3 * projections["3B"]) + (4 * projections["HR"])
+
+    rankings = pd.read_csv(config.DATA_DIRECTORY.joinpath("hitter_rankings.csv"))
+    rankings = rankings.drop(columns=config.HIT_RANK_DROP)
     # Remove any accent marks from player names for better matching
     rankings["Player"] = rankings["Player"].astype(str).apply(lambda x: unidecode(x))
 
@@ -65,61 +45,28 @@ def hitters():
     merge.insert(0, "Rank", rank_col)
     merge = merge.sort_values("Rank")
 
-    for col in ["H", "2B", "3B", "HR", "R", "RBI", "SB", "AVG", "OPS", "TB"]:
+    for col in config.HIT_CATEGORIES:
         col_zscore = col + "_z"
         merge[col_zscore] = (merge[col] - merge[col].mean()) / merge[col].std(ddof=0)
         merge = merge.round({col_zscore: 2})
 
-    merge["total_z"] = sum(merge[col + "_z"] for col in ["H", "2B", "3B", "HR", "R", "RBI", "SB", "AVG", "OPS", "TB"])
+    merge["total_z"] = sum(merge[col + "_z"] for col in config.HIT_CATEGORIES)
     totalz_col = merge.pop("total_z")
     merge.insert(3, "total_z", totalz_col)
 
-    merge.to_csv("sheets/hitter.csv", index=False)
+    merge.to_csv(config.DATA_DIRECTORY.joinpath("hitter.csv"), index=False)
     print("Hitter Z scores exported to sheets/hitter.csv")
-    print(merge)
 
 
 def pitchers():
-    projections = pd.read_csv("sheets/pitcher_projections.csv")
+    projections = pd.read_csv(config.DATA_DIRECTORY.joinpath("pitcher_projections.csv"))
     projections = projections.rename(columns={"Name": "Player"})
+    projections = projections.drop(columns=config.PITCH_PROJ_DROP)
     # Remove any accent marks from player names for better matching
     projections["Player"] = projections["Player"].astype(str).apply(lambda x: unidecode(x))
-    projections = projections.drop(
-        columns=[
-            "#",
-            "GS",
-            "G",
-            "L",
-            "H",
-            "HR",
-            "BB",
-            "BB/9",
-            "K/BB",
-            "HR/9",
-            "AVG",
-            "BABIP",
-            "LOB%",
-            "FIP",
-            "ADP",
-            "InterSD",
-            "InterSK",
-            "IntraSD",
-        ]
-    )
 
-    rankings = pd.read_csv("sheets/pitcher_rankings.csv")
-    rankings = rankings.drop(
-        columns=[
-            "Team",
-            "Overall",
-            "Best",
-            "Worst",
-            "Avg",
-            "Std Dev",
-            "ADP",
-            "vs. ADP",
-        ]
-    )
+    rankings = pd.read_csv(config.DATA_DIRECTORY.joinpath("pitcher_rankings.csv"))
+    rankings = rankings.drop(columns=config.PITCH_RANK_DROP)
     # Remove any accent marks from player names for better matching
     rankings["Player"] = rankings["Player"].astype(str).apply(lambda x: unidecode(x))
 
@@ -132,27 +79,27 @@ def pitchers():
     merge.insert(0, "Rank", rank_col)
     merge = merge.sort_values("Rank")
 
-    for col in ["W", "SV", "HLD", "SO", "K/9", "QS"]:
+    for col in config.PITCH_CAT_COUNT:
         col_zscore = col + "_z"
         merge[col_zscore] = (merge[col] - merge[col].mean()) / merge[col].std(ddof=0)
         merge = merge.round({col_zscore: 2})
 
-    for col in ["ERA", "ER", "WHIP"]:
+    for col in config.PITCH_CAT_RATIO:
         col_zscore = col + "_z"
         merge[col_zscore] = -(merge[col] - merge[col].mean()) / merge[col].std(ddof=0)
         merge = merge.round({col_zscore: 2})
 
     # Intentionally excluding ER_z here
-    merge["total_z"] = sum(merge[col + "_z"] for col in ["W", "SV", "HLD", "ERA", "SO", "WHIP", "K/9", "QS"])
+    merge["total_z"] = sum(merge[col + "_z"] for col in (config.PITCH_CAT_COUNT + config.PITCH_CAT_RATIO))
     totalz_col = merge.pop("total_z")
     merge.insert(3, "total_z", totalz_col)
 
-    merge.to_csv("sheets/pitcher.csv", index=False)
+    merge.to_csv(config.DATA_DIRECTORY.joinpath("pitcher.csv"), index=False)
     print("Hitter Z scores exported to sheets/pitcher.csv")
-    print(merge)
 
 
 def main():
+    config.load_config_file()
     hitters()
     pitchers()
 
