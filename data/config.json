@@ -1,9 +1,9 @@
 {
-    "hit_categories": ["H","2B","HR","R","RBI","SB","AVG","OPS","TB"],
-    "hit_proj_drop": ["#","PA","AB","BB","SO","HBP","CS","BB%","K%","ISO","BABIP","OBP","SLG","wOBA","wRC+","ADP","InterSD","InterSK","IntraSD"],
+    "hit_categories": ["H","2B","HR","R","RBI","SB","AVG","OPS"],
+    "hit_proj_drop": ["#","PA","AB","BB","SO","HBP","CS","BB%","K%","ISO","BABIP","OBP","SLG","wOBA","wRC+","ADP","InterSD","InterSK","IntraSD","TB"],
     "hit_rank_drop": ["Team","Overall","Best","Worst","Avg","Std Dev","ADP","vs. ADP"],
     "pitch_categories_count": ["W","SV","HLD","SO","K/9","QS"],
     "pitch_categories_ratio": ["ERA","WHIP"],
-    "pitch_proj_drop": ["#","GS","G","L","H","HR","BB","BB/9","K/BB","HR/9","AVG","BABIP","LOB%","FIP","ADP","InterSD","InterSK","IntraSD","IntraSD.1"],
+    "pitch_proj_drop": ["#","GS","G","L","H","HR","BB","BB/9","K/BB","HR/9","AVG","BABIP","LOB%","FIP","ADP","InterSD","InterSK","IntraSD"],
     "pitch_rank_drop": ["Team","Overall","Best","Worst","Avg","Std Dev","ADP","vs. ADP"]
 }
